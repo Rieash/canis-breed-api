@@ -1,0 +1,7 @@
+flask==3.0.0
+flask-cors==4.0.0
+tensorflow==2.15.0
+tensorflow-hub==0.16.1
+pillow==10.1.0
+requests==2.31.0
+gunicorn==21.2.0
