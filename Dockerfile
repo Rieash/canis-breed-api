@@ -1,4 +1,4 @@
-# Build 2 - No TensorFlow, simplified backend only
+# Build 3 - Professional version with improved classification
 FROM python:3.11-slim
 
 WORKDIR /app
