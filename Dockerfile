@@ -7,6 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE $PORT
+RUN chmod +x entrypoint.sh
 
-CMD gunicorn app_production:app --workers 1 --threads 4 --bind 0.0.0.0:$PORT
+EXPOSE 5000
+
+CMD ["./entrypoint.sh"]
