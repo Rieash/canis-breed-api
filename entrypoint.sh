@@ -1,2 +1,2 @@
 #!/bin/sh
-exec gunicorn app_production:app --workers 1 --threads 4 --bind 0.0.0.0:${PORT:-5000}
+exec gunicorn app_v2:app --workers 1 --threads 4 --bind 0.0.0.0:${PORT:-5000}
