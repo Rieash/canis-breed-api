@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: canis-breed-api
+    runtime: python
+    pythonVersion: 3.10.12
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app_production:app --workers 1 --threads 4
