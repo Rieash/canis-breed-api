@@ -7,13 +7,27 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+print("=" * 50)
+print("Flask app starting...")
+print("=" * 50)
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'healthy'})
 
 @app.route('/test', methods=['GET'])
 def test():
+    print("TEST endpoint called")
     return jsonify({'message': 'API is working'})
+
+@app.route('/debug', methods=['GET'])
+def debug():
+    import sys
+    return jsonify({
+        'python_version': sys.version,
+        'flask_version': '3.0.0',
+        'working': True
+    })
 
 @app.route('/predict', methods=['POST'])
 def predict():

@@ -1,4 +1,4 @@
-# Build 5 - Direct gunicorn command
+# Build 6 - Flask dev server for debugging
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD gunicorn app_v4:app --workers 1 --threads 4 --bind 0.0.0.0:5000
+CMD python -c "from app_v4 import app; app.run(host='0.0.0.0', port=5000, debug=True)"
