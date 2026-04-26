@@ -13,5 +13,4 @@ RUN chmod +x entrypoint.sh && sed -i 's/\r$//' entrypoint.sh
 
 EXPOSE 5000
 
-# Use shell form to allow env var expansion
-CMD ./entrypoint.sh
+CMD ["./entrypoint.sh"]
