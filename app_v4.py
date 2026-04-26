@@ -128,6 +128,14 @@ def classify_dog_breed(image_bytes):
                 'aspect_ratio_range': (0.8, 1.2),
                 'color_dominant': 'r',  # Red/orange dominant
             },
+            {
+                'name': 'Aspin',
+                'color_ranges': [(140, 220), (100, 180), (60, 140)],  # Tan, brown, cream
+                'brightness_range': (110, 190),
+                'std_range': (20, 50),
+                'aspect_ratio_range': (0.6, 1.6),  # Variable body types
+                'color_dominant': 'r',  # Red/tan dominant
+            },
         ]
         
         # Calculate match score for each breed
@@ -238,6 +246,33 @@ def health():
 def test():
     return jsonify({'message': 'API is working'})
 
+def get_breed_info_local(breed_name):
+    """Get breed info, with special handling for Aspin"""
+    # Aspin (Asong Pinoy) - native Filipino mixed breed
+    if breed_name == 'Aspin':
+        return {
+            'name': 'Aspin (Asong Pinoy)',
+            'origin': 'Philippines',
+            'temperament': 'Loyal, intelligent, adaptable, friendly',
+            'life_span': '12-16 years',
+            'weight': '10-25 kg',
+            'height': '40-60 cm',
+            'description': 'Aspin is a native Filipino mixed-breed dog known for their resilience, loyalty, and adaptability. They are intelligent, easy to train, and make excellent companions.',
+            'image_url': '',
+        }
+    
+    # Generic fallback for other breeds
+    return {
+        'name': breed_name,
+        'origin': 'Unknown',
+        'temperament': 'Friendly, loyal, affectionate',
+        'life_span': '10-15 years',
+        'weight': 'Varies by breed',
+        'height': 'Varies by breed',
+        'description': f'{breed_name} is a wonderful companion dog breed.',
+        'image_url': '',
+    }
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Predict dog breed from image"""
@@ -256,6 +291,9 @@ def predict():
             confidence = result['confidence']
             confidence_pct = result['confidence_percentage']
             
+            # Get breed info (local fallback)
+            breed_info = get_breed_info_local(breed_name)
+            
             # Return response with breed info
             response = {
                 'success': True,
@@ -263,16 +301,7 @@ def predict():
                     'breed': breed_name,
                     'confidence': confidence,
                     'confidence_percentage': confidence_pct,
-                    'breed_info': {
-                        'name': breed_name,
-                        'origin': 'Unknown',
-                        'temperament': 'Friendly, loyal, affectionate',
-                        'life_span': '10-15 years',
-                        'weight': 'Varies by breed',
-                        'height': 'Varies by breed',
-                        'description': f'{breed_name} is a wonderful companion dog breed.',
-                        'image_url': '',
-                    }
+                    'breed_info': breed_info
                 },
                 'all_probabilities': result.get('all_probabilities', {})
             }
