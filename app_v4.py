@@ -141,8 +141,7 @@ def classify_dog_breed(image_bytes):
         ]
         
         # Calculate match score for each breed
-        best_match = None
-        best_score = -1
+        breed_scores = []
         
         for breed in breeds_db:
             score = 0
@@ -172,20 +171,45 @@ def classify_dog_breed(image_bytes):
             # Edge/textural features (10% weight)
             score += min(features['edges'] / 10, 10)
             
-            if score > best_score:
-                best_score = score
-                best_match = breed
+            breed_scores.append({
+                'name': breed['name'],
+                'score': score
+            })
         
-        # Convert score to confidence (60-95% range)
-        confidence = 0.6 + (best_score / 100) * 0.35
-        confidence = min(confidence, 0.95)
+        # Sort by score descending
+        breed_scores.sort(key=lambda x: x['score'], reverse=True)
         
-        print(f"Best match: {best_match['name']} with confidence {confidence:.2%}")
+        # Calculate probabilities from scores (softmax-like normalization)
+        total_score = sum(max(0, b['score']) for b in breed_scores)
+        if total_score > 0:
+            for breed in breed_scores:
+                breed['probability'] = max(0, breed['score']) / total_score
+        else:
+            # Equal probabilities if all scores are 0
+            for breed in breed_scores:
+                breed['probability'] = 1.0 / len(breed_scores)
+        
+        # Get top 3 predictions
+        top_predictions = breed_scores[:3]
+        
+        # Normalize top 3 to sum to 100%
+        top_total = sum(p['probability'] for p in top_predictions)
+        if top_total > 0:
+            for pred in top_predictions:
+                pred['probability'] = pred['probability'] / top_total
+        
+        best_match = top_predictions[0]
+        confidence = best_match['probability']
+        
+        print(f"Top predictions:")
+        for pred in top_predictions:
+            print(f"  {pred['name']}: {pred['probability']:.1%}")
         
         return {
             'breed': best_match['name'],
             'confidence': confidence,
-            'confidence_percentage': f"{confidence:.1%}"
+            'confidence_percentage': f"{confidence:.1%}",
+            'all_probabilities': {p['name']: p['probability'] for p in top_predictions}
         }
         
     except Exception as e:
@@ -254,7 +278,7 @@ def predict():
                             'image_url': breed_info.get('image', {}).get('url', ''),
                         }
                     },
-                    'alternative_predictions': []
+                    'all_probabilities': result.get('all_probabilities', {})
                 }
             else:
                 # Fallback if TheDogAPI fails
@@ -275,7 +299,7 @@ def predict():
                             'image_url': '',
                         }
                     },
-                    'alternative_predictions': []
+                    'all_probabilities': result.get('all_probabilities', {})
                 }
             
             return jsonify(response)
