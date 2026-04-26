@@ -1,4 +1,4 @@
-# Build 6 - Flask dev server for debugging
+# Build 7 - Gunicorn with proper error handling
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD python -c "from app_v4 import app; app.run(host='0.0.0.0', port=5000, debug=True)"
+CMD gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --timeout 120 --access-logfile - --error-logfile - --log-level debug app_v4:app
