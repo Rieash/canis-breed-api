@@ -237,19 +237,22 @@ def health():
 def predict():
     """Predict dog breed from image"""
     try:
+        print("\n=== Predict endpoint called ===")
+        
         if 'image' not in request.files:
+            print("Error: No image provided")
             return jsonify({'error': 'No image provided'}), 400
         
         image_file = request.files['image']
         image_bytes = image_file.read()
         
-        print(f"\n{'='*60}")
         print(f"Received image: {image_file.filename}")
         print(f"Image size: {len(image_bytes)} bytes")
-        print(f"{'='*60}")
         
         # Classify
+        print("Starting classification...")
         result = classify_dog_breed(image_bytes)
+        print(f"Classification result: {result}")
         
         if result:
             breed_name = result['breed']
