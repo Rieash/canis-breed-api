@@ -1,4 +1,4 @@
-# Build 7 - Gunicorn with proper error handling
+# Build 8 - Flask built-in server
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --timeout 120 --access-logfile - --error-logfile - --log-level debug app_v4:app
+CMD python app_v4.py
