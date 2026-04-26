@@ -1,4 +1,4 @@
-# Build 3 - Professional version with improved classification
+# Build 4 - Fixed PORT handling
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -8,8 +8,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chmod +x entrypoint.sh
+# Make entrypoint executable and ensure Unix line endings
+RUN chmod +x entrypoint.sh && sed -i 's/\r$//' entrypoint.sh
 
 EXPOSE 5000
 
-CMD ["./entrypoint.sh"]
+# Use shell form to allow env var expansion
+CMD ./entrypoint.sh
