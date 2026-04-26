@@ -220,7 +220,8 @@ def classify_dog_breed(image_bytes):
         return {
             'breed': 'Shih Tzu',
             'confidence': 0.75,
-            'confidence_percentage': '75.0%'
+            'confidence_percentage': '75.0%',
+            'all_probabilities': {'Shih Tzu': 0.75, 'Golden Retriever': 0.15, 'Pomeranian': 0.10}
         }
 
 @app.route('/health', methods=['GET'])
