@@ -233,6 +233,11 @@ def health():
         'features': ['Advanced visual analysis', 'TheDogAPI breed info', '8+ breeds supported']
     })
 
+@app.route('/test', methods=['GET'])
+def test():
+    """Simple test endpoint"""
+    return jsonify({'message': 'API is working'})
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """Predict dog breed from image"""
