@@ -1,4 +1,4 @@
-# Build 4 - Fixed PORT handling
+# Build 5 - Direct gunicorn command
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -8,9 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Make entrypoint executable and ensure Unix line endings
-RUN chmod +x entrypoint.sh && sed -i 's/\r$//' entrypoint.sh
-
 EXPOSE 5000
 
-CMD ["./entrypoint.sh"]
+CMD gunicorn app_v4:app --workers 1 --threads 4 --bind 0.0.0.0:5000
