@@ -32,12 +32,24 @@ def analyze_image_features(image):
     # Edge detection (simple)
     edges = np.abs(np.diff(pixels.mean(axis=2))).mean()
     
+    # Aspect ratio (for body shape)
+    aspect_ratio = image.width / image.height
+    
+    # Dominant color channels
+    r_dominant = avg_color[0] > avg_color[1] and avg_color[0] > avg_color[2]
+    g_dominant = avg_color[1] > avg_color[0] and avg_color[1] > avg_color[2]
+    b_dominant = avg_color[2] > avg_color[0] and avg_color[2] > avg_color[1]
+    
     return {
         'avg_color': avg_color,
         'std_color': std_color,
         'brightness': brightness,
         'unique_colors': unique_colors,
-        'edges': edges
+        'edges': edges,
+        'aspect_ratio': aspect_ratio,
+        'r_dominant': r_dominant,
+        'g_dominant': g_dominant,
+        'b_dominant': b_dominant
     }
 
 def classify_dog_breed(image_bytes):
@@ -50,55 +62,71 @@ def classify_dog_breed(image_bytes):
         std = features['std_color']
         brightness = features['brightness']
         
-        # Define breed characteristics
+        # Define breed characteristics with more specific ranges
         breeds_db = [
             {
                 'name': 'Shih Tzu',
-                'color_ranges': [(180, 240), (140, 200), (80, 160)],
-                'brightness_range': (100, 220),
+                'color_ranges': [(180, 240), (140, 200), (80, 160)],  # White, tan, gold, brown
+                'brightness_range': (120, 220),
                 'std_range': (25, 60),
+                'aspect_ratio_range': (0.8, 1.2),  # Square-ish (face close-ups)
+                'color_dominant': 'r',  # Red/brown dominant
             },
             {
                 'name': 'Golden Retriever',
-                'color_ranges': [(200, 255), (150, 210), (50, 120)],
+                'color_ranges': [(200, 255), (150, 210), (50, 120)],  # Gold, cream
                 'brightness_range': (140, 200),
                 'std_range': (20, 50),
+                'aspect_ratio_range': (0.7, 1.5),
+                'color_dominant': 'r',  # Red/gold dominant
             },
             {
                 'name': 'German Shepherd',
-                'color_ranges': [(50, 120), (40, 100), (30, 80)],
+                'color_ranges': [(50, 120), (40, 100), (30, 80)],  # Black, tan, brown
                 'brightness_range': (60, 130),
                 'std_range': (30, 70),
+                'aspect_ratio_range': (0.6, 1.8),
+                'color_dominant': 'r',  # Red/brown dominant
             },
             {
                 'name': 'Labrador Retriever',
-                'color_ranges': [(60, 200), (40, 160), (20, 100)],
+                'color_ranges': [(60, 200), (40, 160), (20, 100)],  # Black, chocolate, yellow
                 'brightness_range': (80, 180),
                 'std_range': (15, 45),
+                'aspect_ratio_range': (0.7, 1.5),
+                'color_dominant': 'r',  # Red/yellow dominant
             },
             {
                 'name': 'Bulldog',
-                'color_ranges': [(180, 240), (140, 200), (100, 160)],
+                'color_ranges': [(180, 240), (140, 200), (100, 160)],  # White, fawn, brindle
                 'brightness_range': (120, 200),
                 'std_range': (20, 50),
+                'aspect_ratio_range': (0.9, 1.1),  # Square-ish (face close-ups)
+                'color_dominant': 'r',  # Red/brown dominant
             },
             {
                 'name': 'Poodle',
-                'color_ranges': [(200, 255), (200, 255), (200, 255)],
+                'color_ranges': [(200, 255), (200, 255), (200, 255)],  # White, cream, black
                 'brightness_range': (100, 240),
                 'std_range': (10, 40),
+                'aspect_ratio_range': (0.8, 1.2),
+                'color_dominant': 'none',  # Any color
             },
             {
                 'name': 'Beagle',
-                'color_ranges': [(150, 220), (100, 160), (50, 100)],
+                'color_ranges': [(150, 220), (100, 160), (50, 100)],  # Tri-color
                 'brightness_range': (100, 180),
                 'std_range': (35, 75),
+                'aspect_ratio_range': (0.7, 1.5),
+                'color_dominant': 'r',  # Red/brown dominant
             },
             {
                 'name': 'Pomeranian',
-                'color_ranges': [(200, 255), (150, 220), (100, 180)],
+                'color_ranges': [(200, 255), (150, 220), (100, 180)],  # Orange, cream, white
                 'brightness_range': (120, 220),
                 'std_range': (20, 55),
+                'aspect_ratio_range': (0.8, 1.2),
+                'color_dominant': 'r',  # Red/orange dominant
             },
         ]
         
@@ -108,29 +136,49 @@ def classify_dog_breed(image_bytes):
         for breed in breeds_db:
             score = 0
             
-            # Color matching (50% weight)
+            # Color matching (40% weight)
             r_match = breed['color_ranges'][0][0] <= avg[0] <= breed['color_ranges'][0][1]
             g_match = breed['color_ranges'][1][0] <= avg[1] <= breed['color_ranges'][1][1]
             b_match = breed['color_ranges'][2][0] <= avg[2] <= breed['color_ranges'][2][1]
             
             color_matches = sum([r_match, g_match, b_match])
-            score += (color_matches / 3) * 50
+            score += (color_matches / 3) * 40
             
-            # Brightness matching (20% weight)
+            # Brightness matching (15% weight)
             if breed['brightness_range'][0] <= brightness <= breed['brightness_range'][1]:
-                score += 20
+                score += 15
             else:
                 dist = min(abs(brightness - breed['brightness_range'][0]), 
                           abs(brightness - breed['brightness_range'][1]))
                 if dist < 50:
-                    score += 20 * (1 - dist / 50)
+                    score += 15 * (1 - dist / 50)
             
-            # Color variation/std matching (20% weight)
+            # Color variation/std matching (15% weight)
             if breed['std_range'][0] <= np.mean(std) <= breed['std_range'][1]:
-                score += 20
+                score += 15
             
-            # Edge/textural features (10% weight)
-            score += min(features['edges'] / 10, 10)
+            # Aspect ratio matching (15% weight)
+            aspect_ratio = features['aspect_ratio']
+            if breed['aspect_ratio_range'][0] <= aspect_ratio <= breed['aspect_ratio_range'][1]:
+                score += 15
+            else:
+                dist = min(abs(aspect_ratio - breed['aspect_ratio_range'][0]),
+                          abs(aspect_ratio - breed['aspect_ratio_range'][1]))
+                if dist < 0.5:
+                    score += 15 * (1 - dist / 0.5)
+            
+            # Dominant color matching (10% weight)
+            if breed['color_dominant'] == 'none':
+                score += 10
+            elif breed['color_dominant'] == 'r' and features['r_dominant']:
+                score += 10
+            elif breed['color_dominant'] == 'g' and features['g_dominant']:
+                score += 10
+            elif breed['color_dominant'] == 'b' and features['b_dominant']:
+                score += 10
+            
+            # Edge/textural features (5% weight)
+            score += min(features['edges'] / 10, 5)
             
             breed_scores.append({
                 'name': breed['name'],
